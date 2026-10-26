@@ -2,6 +2,7 @@ class Callisto < Formula
   desc "Dependency-aware versioning and releases for Cargo, npm, and PyPI workspaces"
   homepage "https://github.com/orin-dx/callisto"
   license "FSL-1.1-MIT"
+  version "0.14.2"
 
   on_macos do
     on_arm do

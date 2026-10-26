@@ -2,6 +2,7 @@ class Caliper < Formula
   desc "Fast React prop extraction for Storybook and component docs"
   homepage "https://orin-dx.com/tools/caliper/"
   license "FSL-1.1-MIT"
+  version "0.5.0"
 
   on_macos do
     on_arm do
@@ -28,7 +29,7 @@ class Caliper < Formula
   end
 
   def install
-    bin.install "package/caliper-docgen"
+    bin.install "caliper-docgen"
     generate_completions_from_executable(bin/"caliper-docgen", "completions")
   end
 

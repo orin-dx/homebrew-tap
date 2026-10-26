@@ -71,6 +71,9 @@ def list_tools(root: Path) -> list[str]:
 
 
 def formula_versions(source: str, targets: list[dict]) -> tuple[str, list[re.Pattern]]:
+    explicit_versions = re.findall(r'^  version "(' + VERSION + r')"$', source, re.MULTILINE)
+    if len(explicit_versions) != 1:
+        raise ValueError("Expected one explicit formula version")
     if len(re.findall(r'^\s+url "', source, re.MULTILINE)) != len(targets):
         raise ValueError("Formula URL count differs from the tool manifest")
     if len(re.findall(r'^\s+sha256 "', source, re.MULTILINE)) != len(targets):
@@ -90,7 +93,10 @@ def formula_versions(source: str, targets: list[dict]) -> tuple[str, list[re.Pat
         patterns.append(pattern)
     if len(versions) != 1:
         raise ValueError("Formula target versions disagree")
-    return versions.pop(), patterns
+    target_version = versions.pop()
+    if explicit_versions[0] != target_version:
+        raise ValueError("Formula version disagrees with target URLs")
+    return target_version, patterns
 
 
 def archive_digest(config: dict, target: dict, version: str, get: Callable[[str], bytes]) -> str:
@@ -199,7 +205,14 @@ def update(root: Path, tool: str, tag: str, get: Callable[[str], bytes] = fetch_
         return cache[url]
 
     digests = [archive_digest(config, target, version, cached_get) for target in config["targets"]]
-    updated = source
+    updated, version_count = re.subn(
+        r'^  version "' + re.escape(old_version) + r'"$',
+        f'  version "{version}"',
+        source,
+        flags=re.MULTILINE,
+    )
+    if version_count != 1:
+        raise ValueError("Formula version changed while updating")
     for target, pattern, digest in zip(config["targets"], patterns, digests):
         updated, count = pattern.subn(
             lambda match: match.group(1) + version + match.group(3) + digest + match.group(5),
