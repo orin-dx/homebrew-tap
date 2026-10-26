@@ -51,6 +51,8 @@ def load_tool(root: Path, tool: str) -> dict:
     if config["formula"] != f"Formula/{tool}.rb":
         raise ValueError("Formula path must match the tool")
     for target in targets:
+        if not isinstance(target.get("explicitVersion", False), bool):
+            raise ValueError("Explicit version flag must be a boolean")
         if target["url"].count("{version}") != 1 or not target["url"].startswith("https://"):
             raise ValueError("Each target needs one HTTPS versioned URL")
         if target["binary"] not in target["members"] or len(set(target["members"])) != len(target["members"]):
@@ -71,6 +73,10 @@ def list_tools(root: Path) -> list[str]:
 
 
 def formula_versions(source: str, targets: list[dict]) -> tuple[str, list[re.Pattern]]:
+    explicit_versions = re.findall(r'^[ \t]+version "(' + VERSION + r')"$', source, re.MULTILINE)
+    expected_explicit = sum(target.get("explicitVersion", False) for target in targets)
+    if len(explicit_versions) != expected_explicit:
+        raise ValueError("Formula explicit version count differs from the tool manifest")
     if len(re.findall(r'^\s+url "', source, re.MULTILINE)) != len(targets):
         raise ValueError("Formula URL count differs from the tool manifest")
     if len(re.findall(r'^\s+sha256 "', source, re.MULTILINE)) != len(targets):
@@ -86,11 +92,20 @@ def formula_versions(source: str, targets: list[dict]) -> tuple[str, list[re.Pat
         found = list(pattern.finditer(source))
         if len(found) != 1:
             raise ValueError(f"Expected one URL and checksum for {target['id']}")
+        url_line_start = source.rfind("\n", 0, found[0].start()) + 1
+        previous_lines = source[:url_line_start].splitlines()
+        previous_line = previous_lines[-1] if previous_lines else ""
+        has_override = re.fullmatch(r'[ \t]+version "' + VERSION + r'"', previous_line) is not None
+        if has_override != target.get("explicitVersion", False):
+            raise ValueError(f"Explicit version placement disagrees for {target['id']}")
         versions.add(found[0].group("version"))
         patterns.append(pattern)
     if len(versions) != 1:
         raise ValueError("Formula target versions disagree")
-    return versions.pop(), patterns
+    target_version = versions.pop()
+    if any(explicit_version != target_version for explicit_version in explicit_versions):
+        raise ValueError("Formula version disagrees with target URLs")
+    return target_version, patterns
 
 
 def archive_digest(config: dict, target: dict, version: str, get: Callable[[str], bytes]) -> str:
@@ -199,7 +214,14 @@ def update(root: Path, tool: str, tag: str, get: Callable[[str], bytes] = fetch_
         return cache[url]
 
     digests = [archive_digest(config, target, version, cached_get) for target in config["targets"]]
-    updated = source
+    updated, version_count = re.subn(
+        r'^([ \t]+version ")' + re.escape(old_version) + r'("$)',
+        lambda match: match.group(1) + version + match.group(2),
+        source,
+        flags=re.MULTILINE,
+    )
+    if version_count != sum(target.get("explicitVersion", False) for target in config["targets"]):
+        raise ValueError("Formula version changed while updating")
     for target, pattern, digest in zip(config["targets"], patterns, digests):
         updated, count = pattern.subn(
             lambda match: match.group(1) + version + match.group(3) + digest + match.group(5),

@@ -10,6 +10,7 @@ class Callisto < Formula
     end
 
     on_intel do
+      version "0.14.2"
       url "https://github.com/orin-dx/callisto/releases/download/callisto%400.14.2/callisto-x86_64-apple-darwin.tar.gz"
       sha256 "98188525eed1480bb7efb30ea144aaa7b89dad1da24e76c522f168ce8d7a2373"
     end
@@ -22,6 +23,7 @@ class Callisto < Formula
     end
 
     on_intel do
+      version "0.14.2"
       url "https://github.com/orin-dx/callisto/releases/download/callisto%400.14.2/callisto-x86_64-unknown-linux-gnu.tar.gz"
       sha256 "fa4c91c45135347a8492ff73c0c325b2a6fb6da5a6d02f85427e08a2953d1300"
     end

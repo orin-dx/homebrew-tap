@@ -14,6 +14,7 @@
     },
     {
       "id": "macos-x64",
+      "explicitVersion": true,
       "asset": "callisto-x86_64-apple-darwin.tar.gz",
       "url": "https://github.com/orin-dx/callisto/releases/download/callisto%40{version}/callisto-x86_64-apple-darwin.tar.gz",
       "members": ["callisto"],
@@ -28,6 +29,7 @@
     },
     {
       "id": "linux-x64",
+      "explicitVersion": true,
       "asset": "callisto-x86_64-unknown-linux-gnu.tar.gz",
       "url": "https://github.com/orin-dx/callisto/releases/download/callisto%40{version}/callisto-x86_64-unknown-linux-gnu.tar.gz",
       "members": ["callisto"],

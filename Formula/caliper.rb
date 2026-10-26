@@ -28,7 +28,7 @@ class Caliper < Formula
   end
 
   def install
-    bin.install "package/caliper-docgen"
+    bin.install "caliper-docgen"
     generate_completions_from_executable(bin/"caliper-docgen", "completions")
   end
 

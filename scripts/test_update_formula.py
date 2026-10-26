@@ -44,7 +44,8 @@ class FormulaUpdateTests(unittest.TestCase):
         formula = self.root / config["formula"]
         zero_hash = "0" * 64
         formula.write_text("\n".join(
-            f'  url "{target["url"].format(version="0.5.0")}"\n  sha256 "{zero_hash}"'
+            ('  version "0.5.0"\n' if target.get("explicitVersion", False) else "")
+            + f'  url "{target["url"].format(version="0.5.0")}"\n  sha256 "{zero_hash}"'
             for target in config["targets"]
         ) + "\n")
         replies = {}
@@ -81,13 +82,30 @@ class FormulaUpdateTests(unittest.TestCase):
     def test_github_release_updates_all_targets(self):
         _, formula, replies = self.fixture("callisto")
         self.assertEqual(update(self.root, "callisto", "callisto@0.6.0", replies.__getitem__), "0.6.0")
-        self.assertEqual(formula.read_text().count("0.6.0"), 4)
+        self.assertEqual(formula.read_text().count("0.6.0"), 6)
+        self.assertEqual(formula.read_text().count('  version "0.6.0"'), 2)
         self.assertNotIn('sha256 "' + "0" * 64, formula.read_text())
 
     def test_npm_packages_update_all_targets(self):
         _, formula, replies = self.fixture("caliper")
         self.assertEqual(update(self.root, "caliper", "npm/caliper-docgen@0.6.0", replies.__getitem__), "0.6.0")
         self.assertEqual(formula.read_text().count("0.6.0"), 4)
+        self.assertNotIn('version "', formula.read_text())
+
+    def test_formula_version_must_match_platform_urls(self):
+        _, formula, replies = self.fixture("callisto")
+        formula.write_text(formula.read_text().replace('version "0.5.0"', 'version "0.4.0"'))
+        with self.assertRaisesRegex(ValueError, "version disagrees"):
+            update(self.root, "callisto", "callisto@0.6.0", replies.__getitem__)
+
+    def test_explicit_version_must_stay_with_its_platform(self):
+        _, formula, replies = self.fixture("callisto")
+        source = formula.read_text()
+        source = source.replace('  version "0.5.0"\n', "", 1)
+        source = '  version "0.5.0"\n' + source
+        formula.write_text(source)
+        with self.assertRaisesRegex(ValueError, "placement disagrees"):
+            update(self.root, "callisto", "callisto@0.6.0", replies.__getitem__)
 
     def test_tampered_archive_leaves_formula_unchanged(self):
         config, formula, replies = self.fixture("caliper")
