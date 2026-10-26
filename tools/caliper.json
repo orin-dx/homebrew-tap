@@ -1,0 +1,36 @@
+{
+  "name": "Caliper",
+  "formula": "Formula/caliper.rb",
+  "provider": "npm-platform",
+  "tagPrefix": "npm/caliper-docgen@",
+  "targets": [
+    {
+      "id": "macos-arm64",
+      "package": "caliper-docgen-darwin-arm64",
+      "url": "https://registry.npmjs.org/caliper-docgen-darwin-arm64/-/caliper-docgen-darwin-arm64-{version}.tgz",
+      "members": ["package/caliper-docgen", "package/package.json", "package/README.md"],
+      "binary": "package/caliper-docgen"
+    },
+    {
+      "id": "macos-x64",
+      "package": "caliper-docgen-darwin-x64",
+      "url": "https://registry.npmjs.org/caliper-docgen-darwin-x64/-/caliper-docgen-darwin-x64-{version}.tgz",
+      "members": ["package/caliper-docgen", "package/package.json", "package/README.md"],
+      "binary": "package/caliper-docgen"
+    },
+    {
+      "id": "linux-arm64",
+      "package": "caliper-docgen-linux-arm64-gnu",
+      "url": "https://registry.npmjs.org/caliper-docgen-linux-arm64-gnu/-/caliper-docgen-linux-arm64-gnu-{version}.tgz",
+      "members": ["package/caliper-docgen", "package/package.json", "package/README.md"],
+      "binary": "package/caliper-docgen"
+    },
+    {
+      "id": "linux-x64",
+      "package": "caliper-docgen-linux-x64-gnu",
+      "url": "https://registry.npmjs.org/caliper-docgen-linux-x64-gnu/-/caliper-docgen-linux-x64-gnu-{version}.tgz",
+      "members": ["package/caliper-docgen", "package/package.json", "package/README.md"],
+      "binary": "package/caliper-docgen"
+    }
+  ]
+}

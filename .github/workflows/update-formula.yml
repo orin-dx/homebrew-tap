@@ -1,0 +1,141 @@
+name: Update formula
+
+on:
+  repository_dispatch:
+    types: [tool_released]
+  workflow_dispatch:
+    inputs:
+      tool:
+        description: Formula to update
+        required: true
+        type: string
+      tag:
+        description: Published release tag; leave empty to check the latest stable release
+        required: false
+        type: string
+  schedule:
+    - cron: '17 8 * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  select:
+    if: github.ref == 'refs/heads/main' && github.repository == 'orin-dx/homebrew-tap'
+    runs-on: ubuntu-24.04
+    outputs:
+      tools: ${{ steps.select.outputs.tools }}
+      tag: ${{ steps.select.outputs.tag }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - id: select
+        env:
+          EVENT: ${{ github.event_name }}
+          INPUT_TOOL: ${{ inputs.tool }}
+          INPUT_TAG: ${{ inputs.tag }}
+          RELEASE_TOOL: ${{ github.event.client_payload.tool }}
+          RELEASE_TAG: ${{ github.event.client_payload.tag }}
+        run: |
+          set -euo pipefail
+          case "$EVENT" in
+            schedule)
+              tools=$(python3 scripts/update_formula.py --list-tools)
+              echo "tools=$tools" >> "$GITHUB_OUTPUT"
+              echo 'tag=' >> "$GITHUB_OUTPUT"
+              ;;
+            workflow_dispatch)
+              python3 scripts/update_formula.py --validate-tool "$INPUT_TOOL"
+              if [[ -n "$INPUT_TAG" && ! "$INPUT_TAG" =~ ^[A-Za-z0-9][A-Za-z0-9._@/+\-]{0,127}$ ]]; then
+                echo 'Invalid release tag' >&2
+                exit 1
+              fi
+              echo "tools=[\"${INPUT_TOOL}\"]" >> "$GITHUB_OUTPUT"
+              echo "tag=${INPUT_TAG}" >> "$GITHUB_OUTPUT"
+              ;;
+            repository_dispatch)
+              python3 scripts/update_formula.py --validate-tool "$RELEASE_TOOL"
+              if [[ ! "$RELEASE_TAG" =~ ^[A-Za-z0-9][A-Za-z0-9._@/+\-]{0,127}$ ]]; then
+                echo 'Invalid release tag' >&2
+                exit 1
+              fi
+              echo "tools=[\"${RELEASE_TOOL}\"]" >> "$GITHUB_OUTPUT"
+              echo "tag=${RELEASE_TAG}" >> "$GITHUB_OUTPUT"
+              ;;
+            *) exit 1 ;;
+          esac
+
+  update:
+    needs: select
+    strategy:
+      fail-fast: false
+      matrix:
+        tool: ${{ fromJSON(needs.select.outputs.tools) }}
+    concurrency:
+      group: formula-${{ matrix.tool }}
+      cancel-in-progress: false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Verify release and update formula
+        id: formula
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TOOL: ${{ matrix.tool }}
+          RELEASE_TAG: ${{ needs.select.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if [[ -n "$RELEASE_TAG" ]]; then
+            version=$(python3 scripts/update_formula.py --tool "$TOOL" --tag "$RELEASE_TAG")
+          else
+            version=$(python3 scripts/update_formula.py --tool "$TOOL" --latest)
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if git diff --quiet -- "Formula/${TOOL}.rb"; then
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+          else
+            echo 'changed=true' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Create tap-scoped GitHub App token
+        if: steps.formula.outputs.changed == 'true'
+        id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3
+        with:
+          client-id: ${{ vars.TAP_APP_CLIENT_ID }}
+          private-key: ${{ secrets.TAP_APP_PRIVATE_KEY }}
+          owner: orin-dx
+          repositories: homebrew-tap
+          permission-contents: write
+          permission-pull-requests: write
+      - name: Open update pull request
+        if: steps.formula.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          TOOL: ${{ matrix.tool }}
+          RELEASE_VERSION: ${{ steps.formula.outputs.version }}
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+        run: |
+          set -euo pipefail
+          branch="automation/${TOOL}-${RELEASE_VERSION}"
+          if [[ "$(gh pr list --repo orin-dx/homebrew-tap --head "$branch" --state open --json number --jq 'length')" != 0 ]]; then
+            echo "An update pull request is already open for $TOOL $RELEASE_VERSION"
+            exit 0
+          fi
+          if git ls-remote --exit-code --heads origin "$branch" > /dev/null; then
+            echo "An update branch already exists for $TOOL $RELEASE_VERSION; inspect it before retrying." >&2
+            exit 1
+          fi
+          bot_id=$(gh api "users/${APP_SLUG}[bot]" --jq .id)
+          git config user.name "${APP_SLUG}[bot]"
+          git config user.email "${bot_id}+${APP_SLUG}[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add "Formula/${TOOL}.rb"
+          git commit -m "chore: update ${TOOL} to ${RELEASE_VERSION}"
+          gh auth setup-git
+          git push --set-upstream origin "$branch"
+          printf 'Updates the %s formula to version %s.\n\nThe tap independently fetched every supported archive, verified its published digest and contents, then recorded its SHA-256 in the formula. CI audits, installs, and tests on macOS and Linux.\n' "$TOOL" "$RELEASE_VERSION" > "$RUNNER_TEMP/pr-body.md"
+          gh pr create --repo orin-dx/homebrew-tap --base main --head "$branch" --title "chore: update ${TOOL} to ${RELEASE_VERSION}" --body-file "$RUNNER_TEMP/pr-body.md"
