@@ -1,0 +1,15 @@
+{
+  "tool_use_id": "toolu_01PYAzHdkzVA6w3qD7kPSMvv",
+  "agent_id": "a739fd6ecc609738d",
+  "subagent_type": "general-purpose",
+  "task_description": "Research Homebrew tap tooling",
+  "token_usage": {
+    "input_tokens": 28,
+    "cache_creation_tokens": 76341,
+    "cache_read_tokens": 824805,
+    "output_tokens": 8158,
+    "api_call_count": 14
+  },
+  "started_at": "2026-10-27T15:42:16.87698-07:00",
+  "completed_at": "2026-10-27T15:44:09.888366-07:00"
+}
