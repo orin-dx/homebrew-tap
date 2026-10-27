@@ -1,36 +1,20 @@
 class Callisto < Formula
   desc "Dependency-aware versioning and releases for Cargo, npm, and PyPI workspaces"
   homepage "https://github.com/orin-dx/callisto"
+  url "https://github.com/orin-dx/callisto/archive/refs/tags/callisto%400.15.0.tar.gz"
+  sha256 "ffe5b85b83214aa3cd5d4dca5f22ceddc265fc96e617eaf928063e8b7310f70f"
   license "FSL-1.1-MIT"
+  head "https://github.com/orin-dx/callisto.git", branch: "main"
 
-  on_macos do
-    on_arm do
-      url "https://github.com/orin-dx/callisto/releases/download/callisto%400.14.2/callisto-aarch64-apple-darwin.tar.gz"
-      sha256 "216b8b4fca2a6c4c8c66fa9e9a41887fd6b91d129783571111d701132a09a239"
-    end
-
-    on_intel do
-      version "0.14.2"
-      url "https://github.com/orin-dx/callisto/releases/download/callisto%400.14.2/callisto-x86_64-apple-darwin.tar.gz"
-      sha256 "98188525eed1480bb7efb30ea144aaa7b89dad1da24e76c522f168ce8d7a2373"
-    end
+  livecheck do
+    url :stable
+    regex(/^callisto@v?(\d+(?:\.\d+)+)$/i)
   end
 
-  on_linux do
-    on_arm do
-      url "https://github.com/orin-dx/callisto/releases/download/callisto%400.14.2/callisto-aarch64-unknown-linux-gnu.tar.gz"
-      sha256 "91870b95e5386e19e078d408ea130dfeba39705cd815429aa67b34c71ed1af7b"
-    end
-
-    on_intel do
-      version "0.14.2"
-      url "https://github.com/orin-dx/callisto/releases/download/callisto%400.14.2/callisto-x86_64-unknown-linux-gnu.tar.gz"
-      sha256 "fa4c91c45135347a8492ff73c0c325b2a6fb6da5a6d02f85427e08a2953d1300"
-    end
-  end
+  depends_on "rust" => :build
 
   def install
-    bin.install "callisto"
+    system "cargo", "install", *std_cargo_args(path: "crates/callisto-cli")
     generate_completions_from_executable(bin/"callisto", "completions")
   end
 
