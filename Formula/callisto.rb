@@ -5,27 +5,27 @@ class Callisto < Formula
 
   on_macos do
     on_arm do
-      url "https://github.com/orin-dx/callisto/releases/download/callisto%400.14.2/callisto-aarch64-apple-darwin.tar.gz"
-      sha256 "216b8b4fca2a6c4c8c66fa9e9a41887fd6b91d129783571111d701132a09a239"
+      url "https://github.com/orin-dx/callisto/releases/download/callisto%400.15.0/callisto-aarch64-apple-darwin.tar.gz"
+      sha256 "dc8ceb79d2c2c5136d2231c451628bc6002c438ea644be8625057aa9fcb1ffd2"
     end
 
     on_intel do
-      version "0.14.2"
-      url "https://github.com/orin-dx/callisto/releases/download/callisto%400.14.2/callisto-x86_64-apple-darwin.tar.gz"
-      sha256 "98188525eed1480bb7efb30ea144aaa7b89dad1da24e76c522f168ce8d7a2373"
+      version "0.15.0"
+      url "https://github.com/orin-dx/callisto/releases/download/callisto%400.15.0/callisto-x86_64-apple-darwin.tar.gz"
+      sha256 "a31238c4d8289e4ef7f09415c0cd4d2ce25f052a67bf23abfe845c69b6718d01"
     end
   end
 
   on_linux do
     on_arm do
-      url "https://github.com/orin-dx/callisto/releases/download/callisto%400.14.2/callisto-aarch64-unknown-linux-gnu.tar.gz"
-      sha256 "91870b95e5386e19e078d408ea130dfeba39705cd815429aa67b34c71ed1af7b"
+      url "https://github.com/orin-dx/callisto/releases/download/callisto%400.15.0/callisto-aarch64-unknown-linux-gnu.tar.gz"
+      sha256 "8b42beb3225455b98c7d270f5a4123a3275dfcfeea72a5e424f93e0400ed0578"
     end
 
     on_intel do
-      version "0.14.2"
-      url "https://github.com/orin-dx/callisto/releases/download/callisto%400.14.2/callisto-x86_64-unknown-linux-gnu.tar.gz"
-      sha256 "fa4c91c45135347a8492ff73c0c325b2a6fb6da5a6d02f85427e08a2953d1300"
+      version "0.15.0"
+      url "https://github.com/orin-dx/callisto/releases/download/callisto%400.15.0/callisto-x86_64-unknown-linux-gnu.tar.gz"
+      sha256 "a5e6862aa33e8829d489f4811efe62dd45491792a4a67f029b8df4d641e35e3e"
     end
   end
 
