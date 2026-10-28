@@ -13,9 +13,10 @@ class Caliper < Formula
 
   bottle do
     root_url "https://github.com/orin-dx/homebrew-tap/releases/download/caliper-0.7.0"
-    sha256 cellar: :any_skip_relocation, arm64_tahoe:  "750c223cefb9ddf88b3b412683a63fd49981c330fa5b91d801c5a58a82333e4c"
-    sha256 cellar: :any,                 arm64_linux:  "36b9eca8bfb219cf55f9970b1a6570af1e270f24e58dc278de24097bfa870f66"
-    sha256 cellar: :any,                 x86_64_linux: "a707a8c31567168fa815c7baa16f9b21fd127dd2b00f7bf40989596981a1f338"
+    rebuild 1
+    sha256 cellar: :any_skip_relocation, arm64_tahoe:  "5352752bf1ed6884e01be9dea8dfc180e7d30a4bea2e4327b1a14e5e4d9f5ba4"
+    sha256 cellar: :any,                 arm64_linux:  "bd3ffa9856e4ec80190396ab5bf4c86a4a36b04d246e54e4d2df6403f8bba698"
+    sha256 cellar: :any,                 x86_64_linux: "39af67fc8e9d750c4f639a578733ecfeb3fe3e4c2162f633f5b4ea2696dad8d8"
   end
 
   depends_on "rust" => :build
