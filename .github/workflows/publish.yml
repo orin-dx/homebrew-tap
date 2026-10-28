@@ -1,11 +1,19 @@
-# brew tap-new uses this file to generate a bottle publish workflow for the new tap
+# Based on the workflow brew tap-new generates. Bottles are published after a formula PR merges, not before:
+# `--no-cherry-pick` tells brew pr-pull the PR's commits are already on main, so it only downloads the PR's
+# test-bot bottles, uploads them, and adds the bottle commit.
 name: brew pr-pull
 
 on:
+  # Runs the workflow from the base branch, so a PR cannot change what runs with the App token.
+  pull_request_target:
+    types: [closed]
+    paths:
+      - Formula/**
+  # Retry for a merged PR whose publish run failed.
   workflow_dispatch:
     inputs:
       pull_request:
-        description: Pull request number
+        description: Merged pull request number
         required: true
       head_sha:
         description: Expected pull request head commit SHA (optional)
@@ -16,22 +24,44 @@ defaults:
   run:
     shell: bash -xeuo pipefail {0}
 
+concurrency:
+  group: publish-bottles
+  cancel-in-progress: false
+
 jobs:
   pr-pull:
+    # Only merged PRs from branches in this repository: their bottles were built by our own CI.
+    if: >-
+      github.repository == 'orin-dx/homebrew-tap' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event.pull_request.merged == true &&
+        github.event.pull_request.head.repo.full_name == github.repository))
     runs-on: ubuntu-latest
     permissions:
       actions: read
       attestations: write
       checks: read
-      contents: write
+      contents: read
       id-token: write
       issues: read
-      pull-requests: write
+      pull-requests: read
     steps:
+      # The App is on the main ruleset's bypass list, so it can push the bottle commit without a PR.
+      - name: Create tap-scoped GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3
+        with:
+          client-id: ${{ vars.TAP_APP_CLIENT_ID }}
+          private-key: ${{ secrets.TAP_APP_PRIVATE_KEY }}
+          owner: orin-dx
+          repositories: homebrew-tap
+          permission-contents: write
+          permission-pull-requests: write
+
       - name: Set up Homebrew
         uses: Homebrew/actions/setup-homebrew@4790763c0a3ba4036f72634dc079c4a7dfcd4878 # 2026.10.19.1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Set up git
         id: git_setup
@@ -40,18 +70,18 @@ jobs:
       - name: Pull bottles
         id: pull_bottles
         env:
-          HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HOMEBREW_GITHUB_API_TOKEN: ${{ steps.app-token.outputs.token }}
           HOMEBREW_GIT_COMMITTER_NAME: ${{ steps.git_setup.outputs.name }}
           HOMEBREW_GIT_COMMITTER_EMAIL: ${{ steps.git_setup.outputs.email }}
-          HEAD_SHA: ${{ inputs.head_sha }}
-          PULL_REQUEST: ${{ inputs.pull_request }}
+          HEAD_SHA: ${{ inputs.head_sha || github.event.pull_request.head.sha }}
+          PULL_REQUEST: ${{ inputs.pull_request || github.event.pull_request.number }}
         run: |
           if [[ -n "$HEAD_SHA" ]]
           then
-            brew pr-pull --debug --retain-bottle-dir --tap="$GITHUB_REPOSITORY" --head-sha="$HEAD_SHA" \
-              "$PULL_REQUEST"
+            brew pr-pull --debug --retain-bottle-dir --no-cherry-pick --tap="$GITHUB_REPOSITORY" \
+              --head-sha="$HEAD_SHA" "$PULL_REQUEST"
           else
-            brew pr-pull --debug --retain-bottle-dir --tap="$GITHUB_REPOSITORY" "$PULL_REQUEST"
+            brew pr-pull --debug --retain-bottle-dir --no-cherry-pick --tap="$GITHUB_REPOSITORY" "$PULL_REQUEST"
           fi
 
       - name: Generate build provenance
