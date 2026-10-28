@@ -25,6 +25,6 @@ Replace `cargo/my-crate` with your package. `init` writes files in the current r
 
 ## Where this binary comes from
 
-The formula downloads Callisto's versioned archives from [GitHub Releases](https://github.com/orin-dx/callisto/releases). The tap verifies the publisher's digest and archive contents before it opens a formula PR; Homebrew checks the pinned SHA-256 when you install. See [how tap updates work](../automation.md) for the full path.
+The formula builds Callisto from the tagged source of each [GitHub release](https://github.com/orin-dx/callisto/releases) and ships bottles, so a normal install downloads a prebuilt binary. Homebrew checks the pinned SHA-256 when you install. See [how tap updates work](../automation.md) for the full path.
 
 For another installation channel, Callisto also documents [proto and Cargo installs](https://github.com/orin-dx/callisto#install). Report install or checksum trouble [in this tap](https://github.com/orin-dx/homebrew-tap/issues/new); report CLI behavior [in Callisto](https://github.com/orin-dx/callisto/issues).

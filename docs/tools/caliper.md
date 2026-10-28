@@ -31,6 +31,6 @@ The experimental TypeScript 7.1 beta checker in Caliper's source is a CLI `extra
 
 ## Where this binary comes from
 
-The formula downloads Caliper's platform packages from npm. The tap checks npm's integrity digest and the archive contents before it opens a formula PR; Homebrew checks the pinned SHA-256 when you install. See [how tap updates work](../automation.md) for the full path.
+The formula builds the `caliper-docgen` CLI from the tagged source of each [Caliper release](https://github.com/orin-dx/caliper/releases) and ships bottles, so a normal install downloads a prebuilt binary. Homebrew checks the pinned SHA-256 when you install. See [how tap updates work](../automation.md) for the full path.
 
 Report install or checksum trouble [in this tap](https://github.com/orin-dx/homebrew-tap/issues/new); report extraction or integration behavior [in Caliper](https://github.com/orin-dx/caliper/issues).
