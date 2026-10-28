@@ -43,7 +43,7 @@ The tap's CI builds, tests, and bottles each formula on these systems:
 
 ### Older releases
 
-When a new minor version of a tool ships, the previous minor line stays available as a versioned formula, such as `brew install orin-dx/tap/callisto@0.15`. It receives patch releases for that line only and is keg-only, so it does not link into your `PATH` unless you run `brew link`.
+Older breaking lines of a tool stay available as versioned formulae, such as `brew install orin-dx/tap/callisto@0.15` or `callisto@0.14`. Before 1.0 each minor version is its own line; from 1.0 each major version is. A versioned formula receives patch releases for its line only and is keg-only, so it does not link into your `PATH` unless you run `brew link`. A line is removed only when its upstream project stops supporting it.
 
 ### Check or update an install
 
@@ -57,7 +57,7 @@ brew upgrade orin-dx/tap/callisto
 brew upgrade orin-dx/tap/caliper
 ```
 
-Run only the commands for the tools you installed. `brew info` shows the formula version Homebrew knows about; `--version` reports the CLI you are actually running. A new upstream release reaches this tap after its formula PR is checked and merged, so the two versions can briefly differ.
+Run only the commands for the tools you installed. `brew info` shows the formula version Homebrew knows about; `--version` reports the CLI you are actually running. A new upstream release reaches this tap after its formula PR is checked and merged and its bottles are published, so the two versions can briefly differ.
 
 The fully qualified `brew install orin-dx/tap/<tool>` command asks Homebrew to use this tap's formula. Review [Homebrew's tap trust guide](https://docs.brew.sh/Tap-Trust) if Homebrew asks you to trust the tap.
 

@@ -2,12 +2,14 @@
 
 [← All tools](../../README.md) · [Callisto project](https://github.com/orin-dx/callisto)
 
-Callisto helps a workspace decide what to version, records the reason for each change, then coordinates releases through the package registries you already use. The tap installs its published CLI binary as `callisto`.
+Callisto helps a workspace decide what to version, records the reason for each change, then coordinates releases through the package registries you already use. The tap installs the Callisto CLI as `callisto`.
 
 ```sh
 brew install orin-dx/tap/callisto
 callisto --version
 ```
+
+Earlier breaking lines stay installable as versioned formulae, such as `brew install orin-dx/tap/callisto@0.15` and `callisto@0.14`. They are keg-only, so run `brew link` or call the binary by its full path.
 
 Homebrew also installs Bash, zsh, and fish completions. If suggestions do not appear, check [Homebrew's shell completion setup](https://docs.brew.sh/Shell-Completion).
 
