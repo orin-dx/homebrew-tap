@@ -67,21 +67,38 @@ jobs:
         id: git_setup
         uses: Homebrew/actions/git-user-config@d482da0e602890d3160aade42e72c8556103bf04 # 2026.10.26.1
 
+      # brew pr-pull finds the formulae that need bottles by diffing from the merge-base of origin/HEAD and
+      # GITHUB_SHA to HEAD. On main after a squash merge that diff is empty unless GITHUB_SHA is the commit
+      # the PR merged onto.
+      - name: Find the commit before the merge
+        id: base
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          PULL_REQUEST: ${{ inputs.pull_request || github.event.pull_request.number }}
+        run: |
+          merge_sha=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PULL_REQUEST" --jq .merge_commit_sha)
+          [[ -n "$merge_sha" && "$merge_sha" != null ]] || { echo "Pull request $PULL_REQUEST is not merged" >&2; exit 1; }
+          base_sha=$(gh api "repos/$GITHUB_REPOSITORY/commits/$merge_sha" --jq '.parents[0].sha')
+          echo "sha=$base_sha" >> "$GITHUB_OUTPUT"
+
       - name: Pull bottles
         id: pull_bottles
         env:
           HOMEBREW_GITHUB_API_TOKEN: ${{ steps.app-token.outputs.token }}
           HOMEBREW_GIT_COMMITTER_NAME: ${{ steps.git_setup.outputs.name }}
           HOMEBREW_GIT_COMMITTER_EMAIL: ${{ steps.git_setup.outputs.email }}
+          BASE_SHA: ${{ steps.base.outputs.sha }}
           HEAD_SHA: ${{ inputs.head_sha || github.event.pull_request.head.sha }}
           PULL_REQUEST: ${{ inputs.pull_request || github.event.pull_request.number }}
         run: |
+          # --clean keeps brew from amending the commit that is already on main.
           if [[ -n "$HEAD_SHA" ]]
           then
-            brew pr-pull --debug --retain-bottle-dir --no-cherry-pick --tap="$GITHUB_REPOSITORY" \
-              --head-sha="$HEAD_SHA" "$PULL_REQUEST"
+            GITHUB_SHA="$BASE_SHA" brew pr-pull --debug --retain-bottle-dir --clean --no-cherry-pick \
+              --tap="$GITHUB_REPOSITORY" --head-sha="$HEAD_SHA" "$PULL_REQUEST"
           else
-            brew pr-pull --debug --retain-bottle-dir --no-cherry-pick --tap="$GITHUB_REPOSITORY" "$PULL_REQUEST"
+            GITHUB_SHA="$BASE_SHA" brew pr-pull --debug --retain-bottle-dir --clean --no-cherry-pick \
+              --tap="$GITHUB_REPOSITORY" "$PULL_REQUEST"
           fi
 
       - name: Generate build provenance
