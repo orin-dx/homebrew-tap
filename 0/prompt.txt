@@ -1,0 +1,67 @@
+What happens if we do brew install without from-source?
+
+---
+
+We want this to be easy for users
+
+---
+
+Can we enable both?
+
+---
+
+Go with option 2, source plus bottles
+
+---
+
+Let's leverage as much from the ecosystem as posible
+
+---
+
+Are there GH actions we can reuse?
+
+---
+
+Does this all simplify the update of versions? What do the callisto, caliper, monokl repos need to do?
+
+---
+
+<task-notification>
+<task-id>buppzpcpt</task-id>
+<tool-use-id>toolu_01QySx4qZdo1ZHVh9nzkSnB4</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-gabe-Projects-homebrew-tap/e99590b3-dde0-42a7-8586-70bb9989451f/tasks/buppzpcpt.output</output-file>
+<status>completed</status>
+<summary>Background command "Build caliper from source in scratch tap" completed (exit code 0)</summary>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>bh1d9pnnu</task-id>
+<tool-use-id>toolu_017aXhCeigQEGHoTk66eihVC</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-gabe-Projects-homebrew-tap/e99590b3-dde0-42a7-8586-70bb9989451f/tasks/bh1d9pnnu.output</output-file>
+<status>failed</status>
+<summary>Background command "Build versioned callisto@0.14 from source" failed with exit code 1</summary>
+</task-notification>
+
+---
+
+Can we cleanup any repos that ping here on release or do we keep that and simplify?
+
+---
+
+<task-notification>
+<task-id>b9hygp8v4</task-id>
+<tool-use-id>toolu_01Hjes5okVoNj3KGit8y3qKo</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-gabe-Projects-homebrew-tap/e99590b3-dde0-42a7-8586-70bb9989451f/tasks/b9hygp8v4.output</output-file>
+<status>completed</status>
+<summary>Background command "Retry building callisto@0.14 from source" completed (exit code 0)</summary>
+</task-notification>
+
+---
+
+Do we cleanup the shared action we added too?
+
+---
+
+Yes, do the tap changes and draft the PRs
