@@ -21,6 +21,13 @@ class CallistoAT014 < Formula
 
   depends_on "rust" => :build
 
+  on_macos do
+    on_intel do
+      disable! date:    "2026-10-27",
+               because: "Intel Macs are not supported (Homebrew has no Intel macOS bottles for Rust)"
+    end
+  end
+
   def install
     system "cargo", "install", *std_cargo_args(path: "crates/callisto-cli")
     generate_completions_from_executable(bin/"callisto", "completions")
