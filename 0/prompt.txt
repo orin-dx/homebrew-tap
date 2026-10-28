@@ -1,0 +1,11 @@
+Do we also close the open PR in our tap repo?
+
+---
+
+<task-notification>
+<task-id>blitia26s</task-id>
+<tool-use-id>toolu_0145NRh5mVpkVDEfZoB2ensm</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-gabe-Projects-homebrew-tap/e99590b3-dde0-42a7-8586-70bb9989451f/tasks/blitia26s.output</output-file>
+<status>completed</status>
+<summary>Background command "Wait for CI run, then print linux ARM failure log" completed (exit code 0)</summary>
+</task-notification>
