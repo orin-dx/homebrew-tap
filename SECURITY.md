@@ -19,13 +19,13 @@ This tap is executable packaging code. Homebrew evaluates a formula before insta
 
 - **Install path:** a formula or bottle that runs unexpected code, installs the wrong binary, crosses an architecture boundary, or bypasses its pinned checksum.
 - **Update path:** a forged release signal or tag that makes the bump workflow open a PR for an unexpected source URL; a workflow flaw that turns release data into code execution; a way to publish bottles that were not built by this tap's CI.
-- **Credentials and review:** exposure of the GitHub App key or token, an untrusted PR reaching those credentials, or a way for the App to bypass review and write to `main`.
+- **Credentials and review:** exposure of the GitHub App key or token, an untrusted PR reaching those credentials, or a way to make the App write to `main` outside the publish workflow's bottle commit.
 
 If the bug is in Callisto's or Caliper's CLI rather than its packaging, report it to that project's security contact. If a published bottle or source tag itself looks compromised, report it here too so we can stop distributing it.
 
 ## What the checks cover
 
-Formula URLs are versioned source tarballs and carry SHA-256 values. `brew bump` computes the checksum of the tarball it downloads; the tap does not compare it against a second published digest. CI builds the formula from source, runs `brew audit`, and runs the formula's tests on each macOS and Linux target, then produces the bottles. Bottles are published only by the `brew pr-pull` workflow, with build provenance attestations. The GitHub App is installed only on this tap; a maintainer approves formula PRs.
+Formula URLs are versioned source tarballs and carry SHA-256 values. `brew bump` computes the checksum of the tarball it downloads; the tap does not compare it against a second published digest. CI builds the formula from source, runs `brew audit`, and runs the formula's tests on each macOS and Linux target, then produces the bottles. Bottles are published only by the `brew pr-pull` workflow, after a formula PR merges, with build provenance attestations. The GitHub App is installed only on this tap and is on the `main` ruleset's bypass list so the publish workflow can push the bottle commit; the bypass is not limited to that commit, so the workflows that mint its token (`autobump.yml` and `publish.yml`) are part of the trust boundary and need maintainer review like a formula. A maintainer approves every formula PR.
 
 Those checks do not prove that the upstream repository, its maintainers' accounts, or its source are safe. A credible upstream compromise is in scope for a private report even if every checksum matches.
 

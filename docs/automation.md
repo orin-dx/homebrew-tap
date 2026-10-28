@@ -7,7 +7,7 @@ The tap follows tagged releases. It does not decide when Callisto or Caliper pub
 1. **Detect.** The **brew bump** workflow (`autobump.yml`) runs daily, or on demand. It runs `brew bump --open-pr`, which asks each formula's `livecheck` block for the newest stable tag and opens a PR that changes the source `url` and `sha256`. The source repositories need no tap-specific workflow or secret.
 2. **Test.** **brew test-bot** (`tests.yml`) styles and audits the tap, then builds, tests, and bottles each changed formula on macOS ARM and Intel and Linux ARM and x86-64. Bottles are uploaded as workflow artifacts.
 3. **Review.** A maintainer reads the PR, including any new build or runtime requirements, and approves it once the test-bot jobs pass.
-4. **Publish.** The maintainer runs **brew pr-pull** (`publish.yml`) with the PR number. It uploads the bottles, adds the `bottle do` block to the formula, attests build provenance, and pushes to `main`.
+4. **Publish.** When the PR merges, **brew pr-pull** (`publish.yml`) runs on its own. It runs `brew pr-pull --no-cherry-pick`, which downloads the bottles built for that PR, uploads them, and adds the `bottle do` block to the formula. It then attests build provenance and pushes the bottle commit to `main`. Only merged PRs from this repository that change `Formula/` trigger it, and it runs the base branch's workflow code, so a PR cannot alter what runs with the App token.
 
 The URL comes from the formula and the tag from `livecheck`; `brew bump` computes the checksum itself.
 
@@ -15,7 +15,7 @@ The URL comes from the formula and the tag from `livecheck`; `brew bump` compute
 
 ### Create the App
 
-Pull requests opened with the default `GITHUB_TOKEN` do not trigger other workflows, so the bump workflow uses a short-lived GitHub App token instead. Create an organization-owned GitHub App called something like `orin-dx-homebrew-updater`. Disable its webhook. Give it only **Contents: read and write** and **Pull requests: read and write**, then install it on **only `orin-dx/homebrew-tap`**.
+Pull requests opened with the default `GITHUB_TOKEN` do not trigger other workflows, so the bump workflow uses a short-lived GitHub App token instead. The publish workflow uses the same App to push the bottle commit to `main`. Create an organization-owned GitHub App called something like `orin-dx-homebrew-updater`. Disable its webhook. Give it only **Contents: read and write** and **Pull requests: read and write**, then install it on **only `orin-dx/homebrew-tap`**.
 
 Generate one private key and record the App's client ID. Keep the PEM out of Git and terminal output. Store them as a repository Actions variable and secret on `homebrew-tap` only:
 
@@ -28,7 +28,7 @@ The variable command prompts for the client ID. The secret command reads the PEM
 
 ### Protect `main`
 
-Add a repository ruleset for `main`: require a PR, one approval, dismiss stale approvals after new pushes, and require the four **brew test-bot** jobs: `macOS ARM`, `macOS Intel`, `Linux x86-64`, and `Linux ARM`. Do not give the App a bypass. The sole maintainer can use an admin PR-only bypass for human-authored maintenance. Leave automatic merge off. The publish workflow pushes bottle commits to `main`, so its actor needs to be allowed by the ruleset.
+Add a repository ruleset for `main`: require a PR, one approval, dismiss stale approvals after new pushes, and require the four **brew test-bot** jobs: `macOS ARM`, `macOS Intel`, `Linux x86-64`, and `Linux ARM`. Add the App to the ruleset's bypass list with **Always allow**. That bypass is how the publish workflow pushes the bottle commit, which Homebrew's bottle model needs on `main` after the PR merges. It is the only direct write to `main`; the App's token is minted only in the bump and publish workflows, and the publish workflow runs only for merged PRs from this repository. The sole maintainer can also use an admin PR-only bypass for human-authored maintenance. Leave automatic merge off.
 
 ### Bottle storage
 
@@ -43,6 +43,6 @@ gh workflow run autobump.yml -R orin-dx/homebrew-tap
 gh workflow run publish.yml -R orin-dx/homebrew-tap -f pull_request=<number>
 ```
 
-If a bump PR already exists for a version, `brew bump` skips it. To rotate the App key, replace `TAP_APP_PRIVATE_KEY` in the selected organization secret and revoke the old key in the App's settings.
+Publishing runs on merge. The second command re-runs it for an already merged PR whose publish run failed; the PR's test-bot artifacts must still exist (GitHub keeps them for 90 days by default). If a bump PR already exists for a version, `brew bump` skips it. To rotate the App key, replace `TAP_APP_PRIVATE_KEY` in the selected organization secret and revoke the old key in the App's settings.
 
 See [Contributing](../CONTRIBUTING.md) for formula changes and [Security](../SECURITY.md) for private reporting.
