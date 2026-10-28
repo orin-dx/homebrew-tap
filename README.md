@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/orin-dx/homebrew-tap/actions/workflows/ci.yml"><img src="https://github.com/orin-dx/homebrew-tap/actions/workflows/ci.yml/badge.svg" alt="Formula checks" /></a>
+  <a href="https://github.com/orin-dx/homebrew-tap/actions/workflows/tests.yml"><img src="https://github.com/orin-dx/homebrew-tap/actions/workflows/tests.yml/badge.svg" alt="Formula checks" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="Tap license" /></a>
 </p>
 
@@ -27,20 +27,24 @@ This tap is for published command-line binaries. You can install one tool withou
 
 Each tool guide has a useful first workflow, integration notes, and links to its full project docs. When another CLI joins, it gets one row here and one guide. The tap itself stays focused on installation and updates.
 
-Homebrew downloads a published binary for your platform. You do not need Rust, Cargo, or a compiler to install it.
+Homebrew downloads a prebuilt bottle for your platform, so you do not need Rust, Cargo, or a compiler. If no bottle matches your system, Homebrew builds the tagged release from source, which installs Rust and takes several minutes. `brew install --build-from-source` forces that build.
 
 ## Where it runs
 
-Each formula picks one archive for your OS and CPU. These are the combinations the tap tests:
+The tap's CI builds, tests, and bottles each formula on these systems:
 
 | Platform | CI runner |
 | --- | --- |
-| macOS Apple Silicon | macOS 15 ARM64 |
+| macOS Apple Silicon | macOS 26 ARM64 |
 | macOS Intel | macOS 15 x86-64 |
-| Linux ARM64 | Ubuntu 24.04 ARM64 |
-| Linux x86-64 | Ubuntu 24.04 x86-64 |
+| Linux ARM64 | Homebrew's Ubuntu container, ARM64 |
+| Linux x86-64 | Homebrew's Ubuntu container, x86-64 |
 
-Linux archives target GNU/Linux with glibc. Other distributions and older glibc versions are outside the tap's CI coverage. The formula uses prebuilt archives; it does not compile a fallback binary from source.
+Other systems fall back to a source build.
+
+### Older releases
+
+When a new minor version of a tool ships, the previous minor line stays available as a versioned formula, such as `brew install orin-dx/tap/callisto@0.14`. It receives patch releases for that line only and is keg-only, so it does not link into your `PATH` unless you run `brew link`.
 
 ### Check or update an install
 
@@ -60,7 +64,7 @@ The fully qualified `brew install orin-dx/tap/<tool>` command asks Homebrew to u
 
 ## How an update gets here
 
-Callisto publishes CLI archives on GitHub Releases. Caliper publishes platform binaries on npm. This tap follows those releases through a reviewable formula change.
+Each formula builds a tagged release of the tool from source. Homebrew's own tooling follows new tags and publishes the bottles.
 
 ```mermaid
 %%{init: {'theme': 'base', 'flowchart': {'curve': 'basis', 'nodeSpacing': 40, 'rankSpacing': 56}, 'themeVariables': {'fontFamily': 'Inter, ui-sans-serif, system-ui, sans-serif', 'fontSize': '14px', 'lineColor': '#94a3b8', 'edgeLabelBackground': '#ffffff'}}}%%
@@ -71,38 +75,37 @@ flowchart LR
     classDef router fill:#fffbeb,stroke:#f59e0b,stroke-width:1.5px,color:#78350f,rx:10px,ry:10px,font-weight:600;
     classDef output fill:#ecfdf5,stroke:#10b981,stroke-width:1.5px,color:#064e3b,rx:10px,ry:10px,font-weight:600;
 
-    release["<b>Published CLI</b><br/>GitHub Releases · npm"] --> verify["<b>Verify archives</b><br/>digest · contents"]
-    signal["Release event or daily check"] --> verify
-    manifest[("<b>Tool manifest</b><br/>expected URLs and files")] --> verify
-    verify --> pr[("<b>Formula PR</b><br/>four platform hashes")]
-    pr --> ci["<b>Homebrew CI</b><br/>audit · install · test"]
-    ci --> review{{"<b>Maintainer</b><br/>approval"}}
-    review --> upgrade(["Ready for brew upgrade"])
+    release["<b>Tagged release</b><br/>source on GitHub"] --> bump["<b>brew bump</b><br/>livecheck · new tag"]
+    signal["Daily check"] --> bump
+    bump --> pr[("<b>Formula PR</b><br/>url · sha256")]
+    pr --> ci["<b>brew test-bot</b><br/>build · test · bottle"]
+    ci --> review{{"<b>Maintainer</b><br/>approval · pr-pull"}}
+    review --> upgrade(["Bottles published,<br/>ready for brew upgrade"])
 
     class release,signal source
-    class manifest,pr store
-    class verify,ci engine
+    class pr store
+    class bump,ci engine
     class review router
     class upgrade output
 ```
 
-The release notification supplies only a tool name and tag. The tap chooses URLs from its committed [tool manifests](tools/), downloads all four archives, verifies each against the publisher's digest, and checks for the expected executable. It then pins SHA-256 values in a formula PR. CI audits, installs, and smoke-tests the changed formulas on all four runners; a weekly full run checks the whole catalog. A maintainer reviews each update before merge. A daily check catches releases whose notification was missed.
+Each formula's `livecheck` block says which upstream tags count as releases. The daily **brew bump** workflow runs `brew bump`, which opens a PR that changes the source URL and SHA-256. **brew test-bot** builds, tests, and bottles the change on every platform above. A maintainer reviews the PR, then publishes the bottles with the **brew pr-pull** workflow.
 
-On installation, Homebrew checks the pinned SHA-256 against the downloaded archive. These checks catch mismatched or unexpected files; they cannot prove the upstream publisher or its build process was uncompromised. [How automation works](docs/automation.md) explains the trust boundary, App permissions, and recovery path.
+On installation, Homebrew checks the pinned SHA-256 of the source tarball or bottle. That catches mismatched files; it cannot prove the upstream repository was uncompromised. [How automation works](docs/automation.md) explains the trust boundary, App permissions, and recovery path.
 
 ## If something goes wrong
 
 | What you see | First check |
 | --- | --- |
-| Homebrew cannot find the formula | Use the full name, such as `orin-dx/tap/caliper`, then run `brew update`. Check [formula CI](https://github.com/orin-dx/homebrew-tap/actions/workflows/ci.yml) if it is a fresh release. |
+| Homebrew cannot find the formula | Use the full name, such as `orin-dx/tap/caliper`, then run `brew update`. Check [formula CI](https://github.com/orin-dx/homebrew-tap/actions/workflows/tests.yml) if it is a fresh release. |
 | Homebrew asks whether to trust this tap | Read the [tap trust guide](https://docs.brew.sh/Tap-Trust) and the formula you are about to install. The prompt is Homebrew's normal trust decision for a third-party tap. |
 | Download, checksum, or install fails | Check `brew info orin-dx/tap/<tool>` and retry after `brew update`. [Open a tap issue](https://github.com/orin-dx/homebrew-tap/issues/new) with OS, CPU, Homebrew version, and the failing output. |
-| The command fails on Linux | Check whether your distribution provides glibc compatible with the published GNU/Linux binary. Include the distribution and glibc version in a tap issue. |
+| The install compiles Rust instead of downloading a bottle | No bottle matches your OS and CPU, or the release's bottles are not published yet. Wait for the release's bottles or [open a tap issue](https://github.com/orin-dx/homebrew-tap/issues/new) with your OS and CPU. |
 | Caliper CLI works, but Storybook has no prop docs | Install and configure the version-appropriate [Storybook integration](https://github.com/orin-dx/caliper#storybook) in your project; the Homebrew formula installs only the CLI. |
 | The CLI runs, but its behavior looks wrong | Report the behavior in [Callisto](https://github.com/orin-dx/callisto/issues) or [Caliper](https://github.com/orin-dx/caliper/issues). |
 
 ## Work on the tap
 
-The [formulas](Formula/) tell Homebrew what to install. The [tool manifests](tools/) describe the expected upstream archives, and the [updater](scripts/update_formula.py) turns a verified release into a formula diff. [Contributing](CONTRIBUTING.md) shows how to update a formula or add another tool; Firkin can join once it publishes suitable platform binaries. [Security](SECURITY.md) tells you how to report a sensitive issue privately.
+The [formulas](Formula/) tell Homebrew how to build each tool, and the [workflows](.github/workflows/) are Homebrew's standard tap workflows. [Contributing](CONTRIBUTING.md) shows how to update a formula or add another tool; Firkin can join once it has tagged source releases. [Security](SECURITY.md) tells you how to report a sensitive issue privately.
 
 The tap's files are [MIT licensed](LICENSE). The installed Callisto and Caliper binaries keep their own [upstream](https://github.com/orin-dx/callisto/blob/main/LICENSE) [licenses](https://github.com/orin-dx/caliper/blob/main/LICENSE).

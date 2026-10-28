@@ -1,34 +1,20 @@
 class Caliper < Formula
   desc "Fast React prop extraction for Storybook and component docs"
   homepage "https://orin-dx.com/tools/caliper/"
+  url "https://github.com/orin-dx/caliper/archive/refs/tags/npm/caliper-docgen@0.7.0.tar.gz"
+  sha256 "785a7951d5de24e29c2b61e637750033df4439fd1b9c234c3927730c385727fe"
   license "FSL-1.1-MIT"
+  head "https://github.com/orin-dx/caliper.git", branch: "main"
 
-  on_macos do
-    on_arm do
-      url "https://registry.npmjs.org/caliper-docgen-darwin-arm64/-/caliper-docgen-darwin-arm64-0.5.0.tgz"
-      sha256 "e4905fdd3a98abe96845b74abd8c6ba61682db9a95a8419cb212e91bcaf146fd"
-    end
-
-    on_intel do
-      url "https://registry.npmjs.org/caliper-docgen-darwin-x64/-/caliper-docgen-darwin-x64-0.5.0.tgz"
-      sha256 "c167213a83e912897dc98ad0b929055365f7c21c1a679b9e84db35e4cfcd2d2f"
-    end
+  livecheck do
+    url :stable
+    regex(%r{^npm/caliper-docgen@v?(\d+(?:\.\d+)+)$}i)
   end
 
-  on_linux do
-    on_arm do
-      url "https://registry.npmjs.org/caliper-docgen-linux-arm64-gnu/-/caliper-docgen-linux-arm64-gnu-0.5.0.tgz"
-      sha256 "9c6741cbe3177ce80d54d0363f918c237985888caa79ebe53af6f9b8cda35b65"
-    end
-
-    on_intel do
-      url "https://registry.npmjs.org/caliper-docgen-linux-x64-gnu/-/caliper-docgen-linux-x64-gnu-0.5.0.tgz"
-      sha256 "28ee22beea046251d0d80fcadd8e7748eeea38fb498bbbd5e39abc03a31e9506"
-    end
-  end
+  depends_on "rust" => :build
 
   def install
-    bin.install "caliper-docgen"
+    system "cargo", "install", *std_cargo_args(path: "crates/cli")
     generate_completions_from_executable(bin/"caliper-docgen", "completions")
   end
 

@@ -17,17 +17,17 @@ Tell us which formula or workflow is affected, what an attacker could do, and ho
 
 This tap is executable packaging code. Homebrew evaluates a formula before installing its binary, so a compromised formula or update workflow can harm users even when the CLI itself is sound.
 
-- **Install path:** an archive or formula that runs unexpected code, installs the wrong binary, crosses an architecture boundary, or bypasses its pinned checksum.
-- **Update path:** a forged release signal that makes the updater accept an unverified URL, digest, archive member, or downgrade; a parser or workflow flaw that turns release data into code execution.
+- **Install path:** a formula or bottle that runs unexpected code, installs the wrong binary, crosses an architecture boundary, or bypasses its pinned checksum.
+- **Update path:** a forged release signal or tag that makes the bump workflow open a PR for an unexpected source URL; a workflow flaw that turns release data into code execution; a way to publish bottles that were not built by this tap's CI.
 - **Credentials and review:** exposure of the GitHub App key or token, an untrusted PR reaching those credentials, or a way for the App to bypass review and write to `main`.
 
-If the bug is in Callisto's or Caliper's CLI rather than its packaging, report it to that project's security contact. If a published archive itself looks compromised, report it here too so we can stop distributing it.
+If the bug is in Callisto's or Caliper's CLI rather than its packaging, report it to that project's security contact. If a published bottle or source tag itself looks compromised, report it here too so we can stop distributing it.
 
 ## What the checks cover
 
-Formula URLs are versioned and carry SHA-256 values. Before an automated update, the tap compares each downloaded archive with its publisher's GitHub SHA-256 or npm SHA-512 integrity value and checks its expected contents. CI audits, installs, and runs a smoke test for each macOS and Linux target. The GitHub App is installed only on this tap; a maintainer approves formula PRs.
+Formula URLs are versioned source tarballs and carry SHA-256 values. `brew bump` computes the checksum of the tarball it downloads; the tap does not compare it against a second published digest. CI builds the formula from source, runs `brew audit`, and runs the formula's tests on each macOS and Linux target, then produces the bottles. Bottles are published only by the `brew pr-pull` workflow, with build provenance attestations. The GitHub App is installed only on this tap; a maintainer approves formula PRs.
 
-Those checks do not prove that the publisher's account, build process, or binary is safe. The published digest and archive come from the same upstream. A credible upstream compromise is in scope for a private report even if every checksum matches.
+Those checks do not prove that the upstream repository, its maintainers' accounts, or its source are safe. A credible upstream compromise is in scope for a private report even if every checksum matches.
 
 ## Supported versions
 
