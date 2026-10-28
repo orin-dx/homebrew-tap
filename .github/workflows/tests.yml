@@ -18,16 +18,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ macos-26, macos-15-intel ]
         include:
-          - os: ubuntu-latest
+          - label: macOS ARM
+            os: macos-26
+          - label: macOS Intel
+            os: macos-15-intel
+          - label: Linux x86-64
+            os: ubuntu-latest
             container:
               image: ghcr.io/homebrew/brew:main
               options: --privileged
-          - os: ubuntu-24.04-arm
+          - label: Linux ARM
+            os: ubuntu-24.04-arm
             container:
               image: ghcr.io/homebrew/brew:main
               options: --privileged
+    name: ${{ matrix.label }}
     runs-on: ${{ matrix.os }}
     container: ${{ fromJSON(toJSON(matrix.container)) }} # zizmor: ignore[unpinned-images]
     permissions:

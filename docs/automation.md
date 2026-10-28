@@ -28,7 +28,7 @@ The variable command prompts for the client ID. The secret command reads the PEM
 
 ### Protect `main`
 
-Add a repository ruleset for `main`: require a PR, one approval, dismiss stale approvals after new pushes, and require the **brew test-bot** jobs (one per platform). Do not give the App a bypass. The sole maintainer can use an admin PR-only bypass for human-authored maintenance. Leave automatic merge off. The publish workflow pushes bottle commits to `main`, so its actor needs to be allowed by the ruleset.
+Add a repository ruleset for `main`: require a PR, one approval, dismiss stale approvals after new pushes, and require the four **brew test-bot** jobs: `macOS ARM`, `macOS Intel`, `Linux x86-64`, and `Linux ARM`. Do not give the App a bypass. The sole maintainer can use an admin PR-only bypass for human-authored maintenance. Leave automatic merge off. The publish workflow pushes bottle commits to `main`, so its actor needs to be allowed by the ruleset.
 
 ### Bottle storage
 
