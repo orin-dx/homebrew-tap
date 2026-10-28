@@ -5,7 +5,7 @@ The tap follows tagged releases. It does not decide when Callisto or Caliper pub
 ## The path from release to bottles
 
 1. **Detect.** The **brew bump** workflow (`autobump.yml`) runs daily, or on demand. It runs `brew bump --open-pr`, which asks each formula's `livecheck` block for the newest stable tag and opens a PR that changes the source `url` and `sha256`. The source repositories need no tap-specific workflow or secret.
-2. **Test.** **brew test-bot** (`tests.yml`) styles and audits the tap, then builds, tests, and bottles each changed formula on macOS ARM and Intel and Linux ARM and x86-64. Bottles are uploaded as workflow artifacts.
+2. **Test.** **brew test-bot** (`tests.yml`) styles and audits the tap, then builds and tests each changed formula on macOS ARM and Intel and Linux ARM and x86-64, and bottles it on every platform except macOS Intel, where Homebrew produces no bottle and users build at install time. Bottles are uploaded as workflow artifacts.
 3. **Review.** A maintainer reads the PR, including any new build or runtime requirements, and approves it once the test-bot jobs pass.
 4. **Publish.** When the PR merges, **brew pr-pull** (`publish.yml`) runs on its own. It runs `brew pr-pull --no-cherry-pick`, which downloads the bottles built for that PR, uploads them, and adds the `bottle do` block to the formula. It then attests build provenance and pushes the bottle commit to `main`. Only merged PRs from this repository that change `Formula/` trigger it, and it runs the base branch's workflow code, so a PR cannot alter what runs with the App token.
 

@@ -36,11 +36,10 @@ The tap's CI builds, tests, and bottles each formula on these systems:
 | Platform | CI runner |
 | --- | --- |
 | macOS Apple Silicon | macOS 26 ARM64 |
-| macOS Intel | macOS 15 x86-64 |
 | Linux ARM64 | Homebrew's Ubuntu container, ARM64 |
 | Linux x86-64 | Homebrew's Ubuntu container, x86-64 |
 
-Other systems fall back to a source build.
+Intel Macs are tested in CI but get no bottle, so Homebrew builds them from source at install time. Other systems fall back to a source build as well.
 
 ### Older releases
 
