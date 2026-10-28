@@ -19,7 +19,7 @@ Thanks for helping make these tools easy to install. A good formula change lets 
 
 ## Update an existing formula
 
-Updates are normally automatic. The **brew bump** workflow runs `brew bump --open-pr`, which reads each formula's `livecheck` block and opens a PR when a new release is tagged. To do the same by hand:
+Updates are automatic. The **brew bump** workflow runs `brew bump --open-pr`, which reads each formula's `livecheck` block and opens a PR when a new release is tagged. The **merge release bumps** workflow merges that PR when CI is green and the PR only moves the source URL and checksum, so there is nothing to approve. To do the same by hand:
 
 ```sh
 brew livecheck --tap orin-dx/tap
@@ -36,7 +36,7 @@ A line is removed only when its upstream project stops supporting it, never beca
 
 ### When a new breaking version ships
 
-Before merging a bump PR that moves a formula to a new breaking line (for example `0.15.x` to `0.16.0`), keep the old line installable in a separate PR:
+This is automated. When the daily run sees a tool crossing into a new breaking line (for example `0.15.x` to `0.16.0`), it opens a snapshot PR for the old line first, and the bump PR waits until that is on `main`. Both merge themselves once CI passes. If it ever needs doing by hand, keep the old line installable in a separate PR:
 
 1. Copy `Formula/<tool>.rb` to `Formula/<tool>@<old line>.rb`, such as `callisto@0.15.rb`.
 2. Rename the class (`CallistoAT015`), add `keg_only :versioned_formula`, and pin its `livecheck` regex to the old line (`/^callisto@v?(0\.15\.\d+)$/i`).
@@ -47,6 +47,7 @@ Merge this PR before the bump PR, and don't combine them. Test-bot builds each c
 ### Check the change
 
 ```sh
+python3 -m unittest discover -s .github/scripts -p 'test_*.py'   # only if you changed the automation scripts
 brew style orin-dx/tap
 brew audit --strict --online --formula orin-dx/tap/<tool>
 brew install --build-from-source orin-dx/tap/<tool>
@@ -69,4 +70,4 @@ The daily bump run picks up new releases on its own; the tool's repository needs
 
 ## Review and merge
 
-Formula updates land by PR. A maintainer reviews the release and source change, waits for the three platform checks, approves the PR, and merges it with the normal merge button. The **brew pr-pull** workflow then publishes the bottles automatically: it downloads the PR's CI bottles, uploads them, and pushes a bottle commit to `main`. Until that run finishes, a few minutes at most, installs of the new version build from source. The App's workflows only open PRs and push that bottle commit, but because the App bypasses the `main` ruleset, changes to `.github/workflows/` deserve the same review as a formula change. The [automation guide](docs/automation.md) explains the credentials, the bypass, and the recovery path.
+Version bumps and snapshots from the updater App merge themselves once the three platform checks pass and the guards hold, because the release was already reviewed upstream. Everything else, meaning your own formula changes, workflow and script changes, and Dependabot PRs, needs a maintainer's review and a normal merge. After any formula PR merges, the **brew pr-pull** workflow publishes the bottles automatically: it downloads the PR's CI bottles, uploads them, pushes a bottle commit to `main`, and checks that each formula installs from a bottle. Until that finishes, a few minutes at most, installs of the new version build from source. Because the App bypasses the `main` ruleset, changes to `.github/workflows/` and `.github/scripts/` deserve the same care as a formula change. The [automation guide](docs/automation.md) explains the guards, the credentials, the bypass, and the recovery path.
