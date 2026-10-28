@@ -30,13 +30,14 @@ Read the diff before approving. The source URL should point at the release tag, 
 
 ### When a new minor version ships
 
-Before merging a PR that moves a formula to a new minor version (for example `0.14.x` to `0.15.0`), keep the old line installable:
+Before merging a bump PR that moves a formula to a new minor version (for example `0.15.x` to `0.16.0`), keep the old line installable in a separate PR:
 
-1. Copy `Formula/<tool>.rb` to `Formula/<tool>@<old minor>.rb`, such as `callisto@0.14.rb`.
-2. Rename the class (`CallistoAT014`), add `keg_only :versioned_formula`, and pin its `livecheck` regex to the old minor (`/^callisto@v?(0\.14\.\d+)$/i`).
-3. Delete the versioned formula for the line before it. The tap keeps only the previous minor line.
+1. Copy `Formula/<tool>.rb` to `Formula/<tool>@<old minor>.rb`, such as `callisto@0.15.rb`.
+2. Rename the class (`CallistoAT015`), add `keg_only :versioned_formula`, and pin its `livecheck` regex to the old minor (`/^callisto@v?(0\.15\.\d+)$/i`).
+3. Remove the `bottle do` block and the `head` line from the copy. Bottles belong to a formula name, so CI builds new ones for it.
+4. Delete the versioned formula for the line before it. The tap keeps only the previous minor line.
 
-Do this in the same PR, or open it first. Homebrew bumps versioned formulae like any other.
+Merge this PR before the bump PR, and don't combine them. Test-bot builds each changed formula on the same runner, and when it built `callisto` after `callisto@0.14` in one PR, the versioned formula was still linked and `callisto` never got a bottle. Homebrew bumps versioned formulae like any other.
 
 ### Check the change
 

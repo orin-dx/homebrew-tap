@@ -43,7 +43,7 @@ The tap's CI builds, tests, and bottles each formula on these systems:
 
 ### Older releases
 
-When a new minor version of a tool ships, the previous minor line stays available as a versioned formula, such as `brew install orin-dx/tap/callisto@0.14`. It receives patch releases for that line only and is keg-only, so it does not link into your `PATH` unless you run `brew link`.
+When a new minor version of a tool ships, the previous minor line stays available as a versioned formula, such as `brew install orin-dx/tap/callisto@0.15`. It receives patch releases for that line only and is keg-only, so it does not link into your `PATH` unless you run `brew link`.
 
 ### Check or update an install
 
