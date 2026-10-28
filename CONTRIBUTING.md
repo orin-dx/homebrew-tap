@@ -47,7 +47,7 @@ brew install --build-from-source orin-dx/tap/<tool>
 brew test orin-dx/tap/<tool>
 ```
 
-Run these from a checkout installed as the `orin-dx/tap` tap; `brew --repository orin-dx/tap` shows that checkout. Homebrew may ask you to trust a formula before loading it. Read its Ruby first. The PR workflow runs `brew test-bot` on macOS and Linux, ARM and Intel, and uploads the bottles it builds as artifacts.
+Run these from a checkout installed as the `orin-dx/tap` tap; `brew --repository orin-dx/tap` shows that checkout. Homebrew may ask you to trust a formula before loading it. Read its Ruby first. The PR workflow runs `brew test-bot` on macOS ARM and on Linux ARM and x86-64, and uploads the bottles it builds as artifacts. Intel macOS is not tested or supported; the formulae disable themselves there.
 
 In your PR, link the upstream release, name the platforms you checked locally, and call out anything the smoke test cannot establish. A local pass on one machine is not a claim that every target works.
 

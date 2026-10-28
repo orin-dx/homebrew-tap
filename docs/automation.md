@@ -5,7 +5,7 @@ The tap follows tagged releases. It does not decide when Callisto or Caliper pub
 ## The path from release to bottles
 
 1. **Detect.** The **brew bump** workflow (`autobump.yml`) runs daily, or on demand. It runs `brew bump --open-pr`, which asks each formula's `livecheck` block for the newest stable tag and opens a PR that changes the source `url` and `sha256`. The source repositories need no tap-specific workflow or secret.
-2. **Test.** **brew test-bot** (`tests.yml`) styles and audits the tap, then builds, tests, and bottles each changed formula on macOS ARM and Intel and Linux ARM and x86-64. Bottles are uploaded as workflow artifacts.
+2. **Test.** **brew test-bot** (`tests.yml`) styles and audits the tap, then builds, tests, and bottles each changed formula on macOS ARM and Linux ARM and x86-64. Intel macOS is unsupported: Homebrew publishes no Intel bottles, so `rust` cannot be installed there without a source build, and the formulae use `disable!` to stop with a clear message. Bottles are uploaded as workflow artifacts.
 3. **Review.** A maintainer reads the PR, including any new build or runtime requirements, and approves it once the test-bot jobs pass.
 4. **Publish.** When the PR merges, **brew pr-pull** (`publish.yml`) runs on its own. It runs `brew pr-pull --no-cherry-pick`, which downloads the bottles built for that PR, uploads them, and adds the `bottle do` block to the formula. It then attests build provenance and pushes the bottle commit to `main`. Only merged PRs from this repository that change `Formula/` trigger it, and it runs the base branch's workflow code, so a PR cannot alter what runs with the App token.
 
@@ -28,7 +28,7 @@ The variable command prompts for the client ID. The secret command reads the PEM
 
 ### Protect `main`
 
-Add a repository ruleset for `main`: require a PR, one approval, dismiss stale approvals after new pushes, and require the four **brew test-bot** jobs: `macOS ARM`, `macOS Intel`, `Linux x86-64`, and `Linux ARM`. Add the App to the ruleset's bypass list with **Always allow**. That bypass is how the publish workflow pushes the bottle commit, which Homebrew's bottle model needs on `main` after the PR merges. It is the only direct write to `main`; the App's token is minted only in the bump and publish workflows, and the publish workflow runs only for merged PRs from this repository. The sole maintainer can also use an admin PR-only bypass for human-authored maintenance. Leave automatic merge off.
+Add a repository ruleset for `main`: require a PR, one approval, dismiss stale approvals after new pushes, and require the three **brew test-bot** jobs: `macOS ARM`, `Linux x86-64`, and `Linux ARM`. Add the App to the ruleset's bypass list with **Always allow**. That bypass is how the publish workflow pushes the bottle commit, which Homebrew's bottle model needs on `main` after the PR merges. It is the only direct write to `main`; the App's token is minted only in the bump and publish workflows, and the publish workflow runs only for merged PRs from this repository. The sole maintainer can also use an admin PR-only bypass for human-authored maintenance. Leave automatic merge off.
 
 ### Bottle storage
 
