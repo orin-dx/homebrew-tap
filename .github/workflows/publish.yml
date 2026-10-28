@@ -110,3 +110,73 @@ jobs:
         uses: Homebrew/actions/git-try-push@d482da0e602890d3160aade42e72c8556103bf04 # 2026.10.26.1
         with:
           branch: main
+
+  # Install what was just published on each platform. A formula that compiles instead of pouring a
+  # bottle means the publish did not do its job, so fail loudly.
+  verify:
+    needs: pr-pull
+    name: Install check (${{ matrix.label }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: macOS ARM
+            os: macos-26
+          - label: Linux x86-64
+            os: ubuntu-latest
+          - label: Linux ARM
+            os: ubuntu-24.04-arm
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@d482da0e602890d3160aade42e72c8556103bf04 # 2026.10.26.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install each published formula and require a bottle
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PULL_REQUEST: ${{ inputs.pull_request || github.event.pull_request.number }}
+          TAP_NAME: ${{ steps.set-up-homebrew.outputs.tap-name }}
+        run: |
+          # The checkout predates the bottle commit, so move to the tip of main first.
+          tap_dir=$(brew --repository "$TAP_NAME")
+          git -C "$tap_dir" fetch origin main
+          git -C "$tap_dir" checkout --detach FETCH_HEAD
+          failed=0
+          formulae=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PULL_REQUEST/files" --paginate \
+            --jq '.[] | select(.status != "removed") | .filename | select(startswith("Formula/")) | sub("^Formula/"; "") | sub("\\.rb$"; "")')
+          for formula in $formulae; do
+            if brew install --verbose "$TAP_NAME/$formula" > install.log 2>&1 && grep -q "Pouring" install.log; then
+              echo "$formula installed from a bottle"
+            else
+              cat install.log
+              echo "::error::$formula did not install from a bottle"
+              failed=1
+            fi
+            brew uninstall --force "$TAP_NAME/$formula" || true
+          done
+          exit "$failed"
+
+  alert:
+    needs: [pr-pull, verify]
+    if: >-
+      always() && github.repository == 'orin-dx/homebrew-tap' &&
+      (needs.pr-pull.result == 'failure' || needs.verify.result == 'failure')
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Open an issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PULL_REQUEST: ${{ inputs.pull_request || github.event.pull_request.number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh issue create --repo "$GITHUB_REPOSITORY" \
+            --title "Publishing bottles for #${PULL_REQUEST} failed" \
+            --body "Publishing or the install check failed: ${RUN_URL}. Re-run publish.yml with pull_request=${PULL_REQUEST} once fixed."

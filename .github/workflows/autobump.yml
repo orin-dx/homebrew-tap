@@ -45,6 +45,18 @@ jobs:
           permission-contents: write
           permission-pull-requests: write
 
+      # A bump that crosses into a new breaking line must keep the old line installable, so open that
+      # snapshot PR first. The merge workflow holds the bump PR until the snapshot is on main.
+      - name: Open snapshot PRs for new breaking lines
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          TAP_NAME: ${{ steps.set-up-homebrew.outputs.tap-name }}
+        run: |
+          tap_dir=$(brew --repository "$TAP_NAME")
+          brew livecheck --json --newer-only --tap="$TAP_NAME" > "$RUNNER_TEMP/livecheck.json"
+          python3 "$tap_dir/.github/scripts/tap_automation.py" snapshot \
+            --repo "$GITHUB_REPOSITORY" --tap-dir "$tap_dir" --livecheck "$RUNNER_TEMP/livecheck.json"
+
       - name: Bump formulae
         env:
           HOMEBREW_GITHUB_API_TOKEN: ${{ steps.app-token.outputs.token }}
