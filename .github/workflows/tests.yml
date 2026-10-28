@@ -21,8 +21,6 @@ jobs:
         include:
           - label: macOS ARM
             os: macos-26
-          - label: macOS Intel
-            os: macos-15-intel
           - label: Linux x86-64
             os: ubuntu-latest
             container:

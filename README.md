@@ -39,7 +39,7 @@ The tap's CI builds, tests, and bottles each formula on these systems:
 | Linux ARM64 | Homebrew's Ubuntu container, ARM64 |
 | Linux x86-64 | Homebrew's Ubuntu container, x86-64 |
 
-Intel Macs are tested in CI but get no bottle, so Homebrew builds them from source at install time. Other systems fall back to a source build as well.
+**Intel Macs are not supported.** Homebrew publishes no Intel macOS bottles, so installing a Rust tool there would compile the Rust toolchain from source first. The formulae refuse to install on Intel macOS and say so, rather than start a very long build. Other systems without a matching bottle fall back to a source build.
 
 ### Older releases
 
