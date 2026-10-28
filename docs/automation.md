@@ -32,7 +32,7 @@ Add a repository ruleset for `main`: require a PR, one approval, dismiss stale a
 
 ### Bottle storage
 
-`brew pr-pull` uploads bottles to GitHub Packages for this repository by default. If the first publish run fails on package permissions, grant the workflow package write access or use a release-asset `root_url`. This has not been exercised yet.
+Bottles are stored as assets on GitHub Releases in this repository, one release per formula version (for example `caliper-0.7.0`). `test-bot` writes that `root_url` into each bottle, and `brew pr-upload` creates the release and uploads the assets with the App token's Contents write permission. No package permissions are needed.
 
 ## Run or recover an update
 
