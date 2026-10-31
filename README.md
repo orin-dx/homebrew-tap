@@ -78,7 +78,7 @@ flowchart LR
     signal["Daily check"] --> bump
     bump --> pr[("<b>Formula PR</b><br/>url · sha256")]
     pr --> ci["<b>brew test-bot</b><br/>build · test · bottle"]
-    ci --> review{{"<b>Maintainer</b><br/>approve · merge"}}
+    ci --> review{{"<b>Merge workflow</b><br/>green · guards"}}
     review --> upgrade(["Bottles published,<br/>ready for brew upgrade"])
 
     class release,signal source
@@ -88,7 +88,7 @@ flowchart LR
     class upgrade output
 ```
 
-Each formula's `livecheck` block says which upstream tags count as releases. The daily **brew bump** workflow runs `brew bump`, which opens a PR that changes the source URL and SHA-256. **brew test-bot** builds, tests, and bottles the change on every platform above. A maintainer reviews and merges the PR, and the **brew pr-pull** workflow then publishes the bottles automatically.
+Each formula's `livecheck` block says which upstream tags count as releases. The daily **brew bump** workflow runs `brew bump`, which opens a PR that changes the source URL and SHA-256. **brew test-bot** builds, tests, and bottles the change on every platform above. The release was already reviewed upstream, so the **merge release bumps** workflow merges the PR once CI passes and the PR only moves the source URL and checksum. The **brew pr-pull** workflow then publishes the bottles and checks that each formula installs from one. When a tool crosses into a new breaking line, the previous line is kept as a versioned formula automatically.
 
 On installation, Homebrew checks the pinned SHA-256 of the source tarball or bottle. That catches mismatched files; it cannot prove the upstream repository was uncompromised. [How automation works](docs/automation.md) explains the trust boundary, App permissions, and recovery path.
 

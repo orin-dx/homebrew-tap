@@ -62,6 +62,25 @@ jobs:
       - run: brew test-bot --only-formulae
         if: github.event_name == 'pull_request'
 
+      # test-bot can skip a formula (for example when a dependency has no bottle) and still pass.
+      - name: Require a bottle for every changed formula
+        if: github.event_name == 'pull_request'
+        env:
+          TAP_NAME: ${{ steps.set-up-homebrew.outputs.tap-name }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          tap_dir=$(brew --repository "$TAP_NAME")
+          missing=0
+          # Diff against the PR's own base, like test-bot does; a stacked PR's base is not main.
+          for formula in $(git -C "$tap_dir" diff --name-only --diff-filter=AM "origin/$BASE_REF" HEAD -- Formula); do
+            name=$(basename "$formula" .rb)
+            if ! compgen -G "${name}--*.bottle.json" > /dev/null; then
+              echo "::error::test-bot built no bottle for ${name}"
+              missing=1
+            fi
+          done
+          exit "$missing"
+
       - name: Upload bottles as artifact
         if: always() && github.event_name == 'pull_request'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

@@ -1,0 +1,57 @@
+# Merges the updater App's bump and snapshot PRs once test-bot is green and the guards in
+# .github/scripts/tap_automation.py pass. Everything else still needs a maintainer's review.
+name: merge release bumps
+
+on:
+  # Runs the base branch's workflow, so a PR cannot change what runs with the App token.
+  workflow_run:
+    workflows: [brew test-bot]
+    types: [completed]
+  # A merge can unblock a waiting PR, for example a bump that waits on its snapshot.
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: 23 */6 * * *
+  workflow_dispatch:
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash -xeuo pipefail {0}
+
+concurrency:
+  group: merge-release-bumps
+  cancel-in-progress: false
+
+jobs:
+  merge:
+    if: github.repository == 'orin-dx/homebrew-tap'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      # The App bypasses the main ruleset, which also skips its required checks. The script waits for
+      # them itself before it merges.
+      - name: Create tap-scoped GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3
+        with:
+          client-id: ${{ vars.TAP_APP_CLIENT_ID }}
+          private-key: ${{ secrets.TAP_APP_PRIVATE_KEY }}
+          owner: orin-dx
+          repositories: homebrew-tap
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Merge eligible PRs
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          ISSUE_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/tap_automation.py merge --repo "$GITHUB_REPOSITORY"
