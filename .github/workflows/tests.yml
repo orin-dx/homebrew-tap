@@ -67,10 +67,12 @@ jobs:
         if: github.event_name == 'pull_request'
         env:
           TAP_NAME: ${{ steps.set-up-homebrew.outputs.tap-name }}
+          BASE_REF: ${{ github.base_ref }}
         run: |
           tap_dir=$(brew --repository "$TAP_NAME")
           missing=0
-          for formula in $(git -C "$tap_dir" diff --name-only --diff-filter=AM origin/main HEAD -- Formula); do
+          # Diff against the PR's own base, like test-bot does; a stacked PR's base is not main.
+          for formula in $(git -C "$tap_dir" diff --name-only --diff-filter=AM "origin/$BASE_REF" HEAD -- Formula); do
             name=$(basename "$formula" .rb)
             if ! compgen -G "${name}--*.bottle.json" > /dev/null; then
               echo "::error::test-bot built no bottle for ${name}"
