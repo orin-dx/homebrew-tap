@@ -163,9 +163,18 @@ def open_issue_once(repo, title, body, token):
     gh("issue", "create", "--repo", repo, "--title", title, "--body", body, token=token)
 
 
+def merge_method(settings):
+    """The merge method the repository allows: squash if enabled, else a merge commit, else rebase."""
+    if settings.get("allow_squash_merge"):
+        return "squash"
+    return "merge" if settings.get("allow_merge_commit") else "rebase"
+
+
 def merge_pull_requests(repo, dry_run):
     issue_token = os.environ.get("ISSUE_TOKEN")
+    method = merge_method(api(f"repos/{repo}"))
     pulls = api(f"repos/{repo}/pulls?state=open&per_page=100")
+    failed = False
     for pull in pulls:
         number, head = pull["number"], pull["head"]
         if pull["user"]["login"] != APP_LOGIN or head["repo"]["full_name"] != repo or pull["base"]["ref"] != "main":
@@ -183,17 +192,21 @@ def merge_pull_requests(repo, dry_run):
             if waiting:
                 reason = f"waiting for {', '.join(waiting)}"
         if reason is None:
-            print(f"#{number}: merging")
-            if not dry_run:
-                gh("api", "-X", "PUT", f"repos/{repo}/pulls/{number}/merge", "-f", "merge_method=squash",
+            print(f"#{number}: merging with {method}")
+            if dry_run:
+                continue
+            try:
+                gh("api", "-X", "PUT", f"repos/{repo}/pulls/{number}/merge", "-f", f"merge_method={method}",
                    "-f", f"sha={head['sha']}")
-            continue
+                continue
+            except RuntimeError as error:
+                reason, failed = f"the merge failed: {error}", True
         print(f"#{number}: not merging: {reason}")
         age = datetime.now(timezone.utc) - datetime.fromisoformat(pull["created_at"].replace("Z", "+00:00"))
         if age > STUCK_AFTER and issue_token and not dry_run:
             open_issue_once(repo, f"Bump PR #{number} has not merged",
                             f"{pull['html_url']} has been open for over a day. Last status: {reason}.", issue_token)
-    return 0
+    return 1 if failed else 0
 
 
 def open_snapshot_prs(repo, tap_dir, livecheck_file, dry_run):

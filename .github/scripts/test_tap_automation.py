@@ -67,6 +67,14 @@ class Versions(unittest.TestCase):
         self.assertIsNone(t.source_version("https://example.com/archive/refs/tags/v1.2.3.tar.gz"))
 
 
+class MergeMethod(unittest.TestCase):
+    def test_uses_the_method_the_repository_allows(self):
+        self.assertEqual(t.merge_method({"allow_squash_merge": True, "allow_merge_commit": True}), "squash")
+        self.assertEqual(t.merge_method({"allow_squash_merge": False, "allow_merge_commit": True}), "merge")
+        self.assertEqual(t.merge_method({"allow_squash_merge": False, "allow_merge_commit": False}), "rebase")
+        self.assertEqual(t.merge_method({}), "rebase")
+
+
 class Snapshot(unittest.TestCase):
     def test_pre_1_0_snapshot(self):
         text = t.make_snapshot(formula("0.15.0"))
