@@ -1,8 +1,8 @@
 class Caliper < Formula
   desc "Fast React prop extraction for Storybook and component docs"
   homepage "https://orin-dx.com/tools/caliper/"
-  url "https://github.com/orin-dx/caliper/archive/refs/tags/npm/caliper-docgen@0.8.0.tar.gz"
-  sha256 "50e37f454b8c5609e8b0cab55bb86649b27a1b6b37cd8e875faf35e5bf71b2db"
+  url "https://github.com/orin-dx/caliper/archive/refs/tags/npm/caliper-docgen@0.9.0.tar.gz"
+  sha256 "5e5c520ca60a6d860afd9d942b7224d6583d3b349989686588db4b7059889762"
   license "FSL-1.1-MIT"
   head "https://github.com/orin-dx/caliper.git", branch: "main"
 
