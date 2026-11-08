@@ -10,6 +10,13 @@ class CallistoAT016 < Formula
     regex(/^callisto@v?(0\.16\.\d+)$/i)
   end
 
+  bottle do
+    root_url "https://github.com/orin-dx/homebrew-tap/releases/download/callisto@0.16-0.16.0"
+    sha256 cellar: :any_skip_relocation, arm64_tahoe:  "8c951cdbb8f3043073bd4713ec7d1991eaffb29bfd355f6cba18a11ec9ab28f0"
+    sha256 cellar: :any,                 arm64_linux:  "9c16a022cd0a7eef10dad76879b137fe3d422163ba76a41fb604ce70c38b949e"
+    sha256 cellar: :any,                 x86_64_linux: "783ddbd337e30a4eecfb2fe414e2c2cda24e46c11acbf51c5d1968aa0b99172d"
+  end
+
   keg_only :versioned_formula
 
   depends_on "rust" => :build
