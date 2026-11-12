@@ -12,10 +12,10 @@ class Callisto < Formula
   end
 
   bottle do
-    root_url "https://github.com/orin-dx/homebrew-tap/releases/download/callisto-0.19.0"
-    sha256 cellar: :any_skip_relocation, arm64_tahoe:  "f245d68ad2a411aa2874a80184ddadfbe0b4a4d850209656a6b21ad623bf8b4f"
-    sha256 cellar: :any,                 arm64_linux:  "e5f8662a44b02c63b490abd41b2c09d07d230de4c18580bbc71a975e7ffa5598"
-    sha256 cellar: :any,                 x86_64_linux: "30a2bfaeea09868872cf1d78083346f99984b077b22d9492ce9a7d8a47461a57"
+    root_url "https://github.com/orin-dx/homebrew-tap/releases/download/callisto-0.20.0"
+    sha256 cellar: :any_skip_relocation, arm64_tahoe:  "5c97f1664c9ebb7e9588bb434e4c3bf3e4b1bd32f42022adfebd4bc6a808cb2c"
+    sha256 cellar: :any,                 arm64_linux:  "03a875fb1bfb37597e6ab2a266b3a15d513fbbe7086626bc44d49dc8c6f814ae"
+    sha256 cellar: :any,                 x86_64_linux: "51c1b3dea84707302f95bdf9b4e65431ef762b7516fe464c5e97f548593db499"
   end
 
   depends_on "rust" => :build
