@@ -1,8 +1,8 @@
 class Callisto < Formula
   desc "Dependency-aware versioning and releases for Cargo, npm, and PyPI workspaces"
   homepage "https://github.com/orin-dx/callisto"
-  url "https://github.com/orin-dx/callisto/archive/refs/tags/callisto%400.20.0.tar.gz"
-  sha256 "bd1c6fb7ad91dc847220b64f31dcffe5daaa6d4048c02223ec1e907f8cbfbf7d"
+  url "https://github.com/orin-dx/callisto/archive/refs/tags/callisto%400.21.0.tar.gz"
+  sha256 "b9ac528c456a6ffc6119e54be1edaedae8489be819dc6596e736ef59d218ed75"
   license "FSL-1.1-MIT"
   head "https://github.com/orin-dx/callisto.git", branch: "main"
 
