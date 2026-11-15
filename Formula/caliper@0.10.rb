@@ -10,6 +10,13 @@ class CaliperAT010 < Formula
     regex(%r{^npm/caliper-docgen@v?(0\.10\.\d+)$}i)
   end
 
+  bottle do
+    root_url "https://github.com/orin-dx/homebrew-tap/releases/download/caliper@0.10-0.10.0"
+    sha256 cellar: :any_skip_relocation, arm64_tahoe:  "1741c9e44c44cc8c9976cd78a57f5edfe866034213d117be74297b11e728c855"
+    sha256 cellar: :any,                 arm64_linux:  "13553b3633576e3a3086462b9d0c56079208b979e7a489405a6babf95abf65e7"
+    sha256 cellar: :any,                 x86_64_linux: "d37011b81ee0a8739345207dbb5ab8f7b3dcee55aa3f5a68c0ac5ba21525d555"
+  end
+
   keg_only :versioned_formula
 
   depends_on "rust" => :build
